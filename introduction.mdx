@@ -1,0 +1,31 @@
+---
+title: "Victor Launcher — BepInEx mod manager for Among Us"
+description: "Victor Launcher is a BepInEx plugin for Among Us that lets you install, enable, disable, and share mods from an in-game overlay without editing files by hand."
+---
+
+Victor Launcher is an in-game mod manager for Among Us built on BepInEx. Instead of manually copying files into game directories, you open a lightweight overlay with **F7**, pick a DLL from a native file picker, and let Victor Launcher handle the rest. It tracks which mods are active, which are disabled, and which are queued for install — all from one place inside the game.
+
+## Key features
+
+- **Install DLL mods in-game** — pick any BepInEx-compatible `.dll` file from the native file picker without leaving Among Us
+- **Enable and disable mods** — toggle plugins on or off without manually moving files between folders
+- **Manage grouped mod folders** — treat related mods as a group and manage them together from one menu
+- **View installed, disabled, and queued mods** — see the full state of your mod setup at a glance
+- **Download shared packs by room code** — enter a room code to queue a curated mod pack for install
+- **Status bar feedback** — the Ship Status bar shows warnings when something needs your attention
+- **Skin support** — apply `.vsk` skin files to customize the launcher appearance (version 0.2.3 and later)
+
+## How it fits into BepInEx
+
+Victor Launcher is itself a BepInEx plugin. It loads automatically when BepInEx initializes, registers Harmony patches, and injects a UI layer into the Among Us game loop. Because it runs inside BepInEx, it can only manage other BepInEx-compatible DLL mods — ZIP mods, Steam Workshop content, and other formats are not supported.
+
+The launcher communicates with a Supabase backend to support shared pack downloads. You can also self-host that backend if you need a private server; see [Supabase self-hosting](/configuration/supabase-self-hosting) for details.
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Drop a single DLL into your BepInEx plugins folder and you're ready to go.
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Open the launcher, install your first mod, and restart the game in minutes.
+  </Card>
+</CardGroup>

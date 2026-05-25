@@ -1,0 +1,61 @@
+---
+title: "Install Victor Launcher into your Among Us BepInEx setup"
+description: "Download the Victor Launcher DLL, place it in your BepInEx plugins folder, and launch Among Us to have the mod manager ready in under a minute."
+---
+
+Victor Launcher ships as a single `.dll` file. You place it in the standard BepInEx plugins directory, launch Among Us, and the mod manager loads automatically. There is no installer, no configuration wizard, and no additional runtime to install.
+
+## Prerequisites
+
+Before installing Victor Launcher, make sure you have:
+
+- **Among Us** installed on your machine
+- **BepInEx** installed into your Among Us folder — Victor Launcher is a BepInEx plugin and will not run without it. BepInEx is required but is not bundled with Victor Launcher; refer to the BepInEx documentation for IL2CPP games to set it up before continuing.
+
+## Installation steps
+
+<Steps>
+  <Step title="Download the latest release">
+    Go to the [Victor Launcher GitHub releases page](https://github.com/stevensonhouset5-sys/Victor-Launcher/releases) and download the latest release asset — it is a file named `VictorLauncher.dll`.
+  </Step>
+  <Step title="Locate your Among Us folder">
+    Find the root folder where Among Us is installed. On a typical Steam installation this is inside your Steam library directory under `Among Us/`. The folder contains the `Among Us.exe` executable.
+  </Step>
+  <Step title="Copy the DLL into the plugins folder">
+    Place `VictorLauncher.dll` into the following path inside your Among Us folder:
+
+    ```
+    <Among Us folder>/BepInEx/plugins/
+    ```
+
+    If the `plugins/` folder does not exist, BepInEx was not set up correctly — revisit the BepInEx installation before continuing.
+  </Step>
+  <Step title="Launch Among Us">
+    Start Among Us normally. BepInEx loads all plugins in the `plugins/` folder on startup. You will see a log entry confirming that Victor Launcher has been loaded.
+  </Step>
+  <Step title="Open Victor Launcher">
+    Once you are in-game, press **F7**. The Victor Launcher overlay appears. The Ship Status bar at the bottom reads **Ship Status: Ready** when everything is working correctly.
+  </Step>
+</Steps>
+
+## Windows security warning
+
+When you first run Among Us after placing the DLL, Windows may display a "Windows protected your PC" SmartScreen popup. This warning appears for files downloaded from the internet that have not yet built a reputation with Microsoft's telemetry.
+
+Victor Launcher is safe to run. If you want to verify the file before proceeding, upload it to [VirusTotal](https://www.virustotal.com) and check the results. Once you are satisfied, click **More info** in the SmartScreen dialog and then **Run anyway** to continue.
+
+## What happens on first launch
+
+When Among Us starts with Victor Launcher installed for the first time:
+
+1. BepInEx discovers `VictorLauncher.dll` in the `plugins/` folder and loads it.
+2. Victor Launcher registers its Harmony patches and attaches the overlay to the game UI.
+3. The BepInEx config file is created at `BepInEx/config/com.tate.amongus.starterplugin.cfg` with default values.
+4. The **F7** hotkey is registered in the game loop.
+5. The overlay is available immediately — press **F7** from any screen to open it.
+
+The state snapshot file (`BepInEx/config/victor-launcher-state.json`) is created the first time you perform any mod operation (install, enable, disable, or stage a DLL), not on the initial launch.
+
+<Note>
+  Versions 0.2.0 and older have limited features compared to current releases. Shared pack downloads, skin support, and grouped mod folder management are only available in newer versions. If you are running an older release, upgrade to the latest version to access the full feature set.
+</Note>

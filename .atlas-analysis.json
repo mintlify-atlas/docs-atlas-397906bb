@@ -1,0 +1,76 @@
+{
+  "projectType": "general",
+  "projectName": "Victor Launcher",
+  "projectDescription": "An in-game BepInEx mod manager for Among Us that lets players install, enable, disable, and share DLL plugin packs via room codes without manually moving files.",
+  "theme": "palm",
+  "primaryColor": "#2A7DE1",
+  "lightColor": "#5BA3F5",
+  "darkColor": "#0F3470",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Using Victor Launcher",
+            "pages": [
+              "guides/managing-mods",
+              "guides/shared-packs",
+              "guides/skins"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/bepinex-config",
+              "configuration/supabase-self-hosting"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/mod-manifest",
+              "reference/file-layout",
+              "reference/troubleshooting"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "In-game mod manager UI accessible via F7 hotkey",
+    "Install DLL plugins from a native file picker without touching the game folder manually",
+    "Enable and disable mods individually or as grouped folders",
+    "Download shared mod packs using room codes from the Victor Launcher web manager",
+    "Signed manifest verification with RSA/SHA-256 to ensure pack integrity",
+    "Automatic backup of overwritten DLLs before install",
+    "VSK skin system for customizing the launcher appearance",
+    "Persistent state snapshot saved to victor-launcher-state.json after every change"
+  ],
+  "publicApiSurface": [
+    "ModFileService.GetMods() — list active and disabled managed mod entries",
+    "ModFileService.GetStagedMods() — list queued DLLs in mod-imports",
+    "ModFileService.StageDll(sourcePath) — queue a local DLL for install",
+    "ModFileService.InstallStagedMod(sourcePath) — move a queued DLL into plugins",
+    "ModFileService.InstallStagedGroup(groupKey) — install an entire queued folder",
+    "ModFileService.Enable(fullPath) / Disable(fullPath) — toggle a single DLL",
+    "ModFileService.EnableGroup(groupKey) / DisableGroup(groupKey) — toggle a folder",
+    "ModFileService.DeleteDisabled(fullPath) — permanently remove a disabled DLL",
+    "ModFileService.StageDownloadedDll(groupName, fileName, bytes) — stage a DLL downloaded from a room pack",
+    "SupabasePackService.DownloadPackAsync(roomCode, modFileService) — fetch and stage a signed room manifest",
+    "GameProcessService.PickDllAndStage(modFileService) — open native file picker and stage selected DLL",
+    "GameProcessService.CloseAmongUs() — quit the game via UnityEngine.Application.Quit",
+    "InstallPlanner.CreatePlan(amongUsDirectory, manifest, installedManifestIds) — produce an InstallPlan from a ModManifest",
+    "ModManifest — data model describing a mod: Id, Name, Version, GameVersion, Loader, Dependencies, Conflicts, Files",
+    "ModActionResult — result type with Succeeded flag and Message returned by all service operations"
+  ]
+}

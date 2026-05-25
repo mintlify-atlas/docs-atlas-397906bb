@@ -1,0 +1,100 @@
+---
+title: "File layout: directories and files Victor Launcher manages"
+description: "Every directory and file that Victor Launcher creates or manages inside your Among Us installation, including the group system and state snapshot JSON format."
+---
+
+Victor Launcher confines all of its activity to the `BepInEx/` directory inside your Among Us installation folder. It never writes outside that tree. The paths below are relative to your Among Us folder (the folder that contains `Among Us.exe`).
+
+## Directory tree
+
+```text
+Among Us/
+└── BepInEx/
+    ├── plugins/                          ← active mods loaded by BepInEx
+    │   ├── SomeMod.dll                   ← loose DLL (top-level, no group)
+    │   └── FridayPack/                   ← group named "FridayPack"
+    │       ├── ModA.dll
+    │       └── ModB.dll
+    ├── plugins-disabled/                 ← disabled mods (same structure as plugins/)
+    │   └── OldMod.dll
+    ├── mod-imports/                      ← staged/queued mods (cleared after install)
+    │   └── NewMod.dll
+    ├── victor-backups/                   ← automatic backups before file overwrites
+    │   └── 20240601T200000Z/             ← timestamp subfolder (ISO 8601, UTC)
+    │       └── BepInEx/plugins/OldMod.dll
+    └── config/
+        ├── victor-launcher-state.json    ← mod state snapshot
+        └── com.tate.amongus.starterplugin.cfg  ← BepInEx config for Victor Launcher
+```
+
+## Directories
+
+### `BepInEx/plugins/`
+
+Active mods. BepInEx scans this directory on startup and loads every `.dll` it finds. When you enable a mod in Victor Launcher, it moves the file here from `plugins-disabled/`. When you install a new mod, files land here directly (after being staged in `mod-imports/`).
+
+### `BepInEx/plugins-disabled/`
+
+Disabled mods. Victor Launcher creates this directory automatically. Files here are ignored by BepInEx at startup. Disabling a mod moves its `.dll` from `plugins/` to this directory; enabling it reverses the move.
+
+<Warning>
+  Victor Launcher cannot disable itself while it is running. If you need to remove `VictorLauncher.dll`, close the game first and move the file manually.
+</Warning>
+
+### `BepInEx/mod-imports/`
+
+The staging area. When you select a DLL to import via the launcher file picker, Victor Launcher copies it here first. On the next game restart, the launcher moves staged files into `plugins/` and clears this directory. The state snapshot records staged files under the `"staged"` key.
+
+### `BepInEx/victor-backups/`
+
+Automatic backups. Before overwriting an existing file during a room-pack install, Victor Launcher copies the original here. Each backup session gets its own subdirectory named with a UTC ISO 8601 timestamp (for example, `20240601T200000Z/`). The original relative path is preserved inside that subfolder so you can restore files manually if needed.
+
+### `BepInEx/config/`
+
+Configuration and state. Victor Launcher reads and writes two files here.
+
+## Files
+
+### `BepInEx/config/victor-launcher-state.json`
+
+A state snapshot written by Victor Launcher after every mod operation. It records which DLLs are active, disabled, and staged at the time of the last write.
+
+```json
+{
+  "generatedAtUtc": "2024-06-01T20:00:00Z",
+  "active": [
+    "SomeMod.dll",
+    "FridayPack/ModA.dll",
+    "FridayPack/ModB.dll"
+  ],
+  "disabled": [
+    "OldMod.dll"
+  ],
+  "staged": []
+}
+```
+
+| Field | Description |
+|---|---|
+| `generatedAtUtc` | UTC timestamp of the last snapshot write. |
+| `active` | Relative paths (from `plugins/`) of all active DLLs. |
+| `disabled` | Relative paths (from `plugins-disabled/`) of all disabled DLLs. |
+| `staged` | Relative paths (from `mod-imports/`) of all staged DLLs. |
+
+### `BepInEx/config/com.tate.amongus.starterplugin.cfg`
+
+The BepInEx configuration file for Victor Launcher. This is where you set the Supabase URL, the signing public key, and other runtime options. See [BepInEx configuration](/configuration/bepinex-config) for all available keys.
+
+## The group system
+
+Victor Launcher organizes mods into **groups** based on subdirectory structure inside `plugins/` and `plugins-disabled/`.
+
+- **Loose DLLs** — any `.dll` that sits directly at the top level of `plugins/` or `plugins-disabled/` (not inside a subdirectory) is classified as a loose DLL. These appear in the launcher UI under the label **Loose DLLs**.
+
+- **Named groups** — any `.dll` inside a subdirectory of `plugins/` or `plugins-disabled/` belongs to a group named after that subdirectory. The launcher replaces path separators with ` / ` when displaying the group name (for example, `FridayPack/ModA.dll` belongs to the group **FridayPack**).
+
+Room-pack installs that include multiple files typically place them inside a named subdirectory so they appear as a single group in the UI and can be enabled or disabled together.
+
+<Tip>
+  If you want a set of manually imported DLLs to appear as a group, create a subdirectory inside `plugins/` (for example, `plugins/MyGroup/`) and place the DLLs there before importing them.
+</Tip>

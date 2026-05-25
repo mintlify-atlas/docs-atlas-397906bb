@@ -1,0 +1,46 @@
+---
+title: "Customize Victor Launcher's appearance with .vsk skins"
+description: "Apply a .vsk skin file to change Victor Launcher's header, button colors, and primary and secondary colors without editing any code."
+---
+
+Victor Launcher supports visual skins in the `.vsk` format, introduced in version 0.2.3. A skin file lets you replace the default color scheme and header without modifying the launcher itself — just drop the file in the right place and the launcher picks it up automatically.
+
+<Warning>
+  Skins require Victor Launcher version 0.2.3 or newer. If you are running an older version, update before trying to apply a skin.
+</Warning>
+
+## Applying a skin
+
+<Steps>
+  <Step title="Obtain a .vsk file">
+    Download a `.vsk` skin file. Sample skins were released alongside Victor Launcher v0.2.3 — check the v0.2.3 release notes on the [GitHub releases page](https://github.com/stevensonhouset5-sys/Victor-Launcher) for links.
+  </Step>
+  <Step title="Place the file in your plugins folder">
+    Copy the `.vsk` file into `BepInEx/plugins/`, the same folder that contains `VictorLauncher.dll`.
+
+    ```
+    BepInEx/
+    └── plugins/
+        ├── VictorLauncher.dll
+        └── my-skin.vsk
+    ```
+  </Step>
+  <Step title="Launch Among Us">
+    Start the game. Victor Launcher reads the skin file on startup and applies it to the overlay automatically. No additional configuration is needed.
+  </Step>
+</Steps>
+
+<Note>
+  Victor Launcher uses only one skin at a time. If you have multiple `.vsk` files in `BepInEx/plugins/`, only one will be applied. Remove any skin files you do not want to use.
+</Note>
+
+## What a skin can customize
+
+A `.vsk` file can change the following parts of the launcher UI:
+
+| Element | Description |
+|---|---|
+| **Header** | The banner or title area at the top of the launcher overlay |
+| **Button colors** | The fill color of buttons throughout the UI |
+| **Primary color** | The main accent color used for highlights and active states |
+| **Secondary color** | The supporting accent color used for secondary UI elements |

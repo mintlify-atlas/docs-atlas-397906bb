@@ -1,0 +1,81 @@
+---
+title: 'Self-hosting the Supabase backend for Victor Launcher'
+description: 'Replace the default public Supabase backend with your own project to run private room management, rotate signing keys, and control which mod packs are served.'
+---
+
+Victor Launcher ships pre-configured to use a shared public Supabase backend. If you run a private community and want full control over which room codes exist and which mod packs they serve, you can point Victor Launcher at your own Supabase project by editing three keys in the [BepInEx config file](/configuration/bepinex-config).
+
+<Warning>
+  Self-hosting is an advanced use case intended for server operators and mod community administrators. If you just want to download and play mods, use the default backend — no configuration is needed.
+</Warning>
+
+## What your Supabase project must provide
+
+Victor Launcher expects the following on your Supabase project:
+
+- **An Edge Function** named `room-manifest` (or the custom name you set in `ManifestRpc`) that accepts a room code and returns a signed JSON manifest listing the mods for that room.
+- **A database RPC** named `get_room_manifest` as a fallback. Victor Launcher tries this automatically if the Edge Function returns a 404 with `"Requested function was not found"` or `"code":"NOT_FOUND"`.
+
+<Note>
+  Victor Launcher uses a fallback chain when resolving the manifest endpoint: it tries your configured `ManifestRpc` value first, then the default `room-manifest` (deduplicated if they are the same), and finally the legacy RPC `get_room_manifest`. If you rename your Edge Function to something other than `room-manifest`, you must set `ManifestRpc` to that name — otherwise Victor Launcher will still attempt `room-manifest` as the second step before falling back to the legacy RPC.
+</Note>
+
+## Config keys to update
+
+Open `BepInEx/config/com.tate.amongus.starterplugin.cfg` and set the following keys under `[Supabase]`:
+
+| Key | What to set |
+|-----|-------------|
+| `ProjectUrl` | The base URL of your Supabase project, e.g. `https://your-project.supabase.co` |
+| `AnonKey` | The anonymous key from your Supabase project's API settings |
+| `ManifestSigningPublicKeyPem` | The PEM-encoded RSA public key that matches the private key your backend uses to sign manifests |
+
+`ManifestRpc` only needs to change if you named your Edge Function something other than `room-manifest`.
+
+## Signing key pair
+
+Every room manifest Victor Launcher downloads is verified against `ManifestSigningPublicKeyPem` using RSA-SHA256 (PKCS#1). The default installation ships with the public key for the shared backend. When you run your own backend, you must:
+
+1. Generate a new RSA key pair.
+2. Configure your backend to sign manifests with the private key.
+3. Put the corresponding public key (PEM format) in `ManifestSigningPublicKeyPem` in the config file.
+
+This ensures that only manifests signed by your backend are accepted by players pointed at your project.
+
+<Warning>
+  Do not leave `ManifestSigningPublicKeyPem` blank. If the key is absent, Victor Launcher skips signature verification and will accept any manifest, including malicious or tampered ones. Always set a valid public key when self-hosting.
+</Warning>
+
+## URL restriction
+
+Victor Launcher enforces a security check on every file URL inside a manifest: each URL must be hosted on the **same domain as `ProjectUrl`**. If a manifest lists a DLL hosted on a different domain, the download is rejected. Host all mod files in your Supabase project's storage or another service on the same domain.
+
+File URLs must use `https` or `http`.
+
+## Example config for a self-hosted setup
+
+```ini
+[Supabase]
+
+ProjectUrl = https://your-project.supabase.co
+
+AnonKey = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+## Only needed if you named your Edge Function something other than room-manifest
+ManifestRpc = room-manifest
+
+ManifestSigningPublicKeyPem = -----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="BepInEx config reference" icon="file-code" href="/configuration/bepinex-config">
+    Full reference for every config key, including defaults and the Reload Config button.
+  </Card>
+  <Card title="Shared packs" icon="box" href="/guides/shared-packs">
+    Understand how room codes map to mod packs for your players.
+  </Card>
+</CardGroup>

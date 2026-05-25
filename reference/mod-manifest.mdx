@@ -1,0 +1,138 @@
+---
+title: "Mod manifest format and signed envelope field reference"
+description: "Reference for the ModManifest schema Victor Launcher uses when downloading room packs, including every field definition and the signed envelope wrapper format."
+---
+
+When a player enters a room code, Victor Launcher fetches a **signed manifest envelope** from the configured Supabase endpoint. The envelope contains a `ModManifest` — a description of every file that belongs to a mod pack. Victor Launcher uses this manifest to plan the install: resolving dependencies, detecting conflicts, and mapping each file to its destination on disk.
+
+## ModManifest fields
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for this manifest. Victor Launcher uses this ID — not any DLL filename — when checking dependencies and conflicts against other installed manifests.
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Human-readable display name shown in the launcher UI (for example, `"My Mod Pack"`).
+</ResponseField>
+
+<ResponseField name="version" type="string">
+  Version string for the mod pack (for example, `"1.0.0"`). Victor Launcher records this in the state snapshot but does not enforce semver.
+</ResponseField>
+
+<ResponseField name="gameVersion" type="string">
+  The Among Us version this pack targets (for example, `"2024.3.5"`). Informational only; Victor Launcher does not block installs based on this value.
+</ResponseField>
+
+<ResponseField name="loader" type="string" default="BepInEx">
+  The mod loader this pack requires. Defaults to `"BepInEx"`. Victor Launcher only manages BepInEx DLL plugins.
+</ResponseField>
+
+<ResponseField name="dependencies" type="string[]">
+  List of manifest IDs that must already be installed before this pack can be installed. Victor Launcher reports any missing IDs as `MissingDependencies` on the install plan.
+
+  <Note>
+    Dependencies are matched by **manifest ID** (the `id` field), not by DLL filename.
+  </Note>
+</ResponseField>
+
+<ResponseField name="conflicts" type="string[]">
+  List of manifest IDs that must **not** be installed alongside this pack. Victor Launcher reports any present IDs as `ActiveConflicts` on the install plan.
+
+  <Note>
+    Conflicts are also matched by **manifest ID**. Victor Launcher surfaces the conflict but does not automatically uninstall the conflicting pack.
+  </Note>
+</ResponseField>
+
+<ResponseField name="files" type="ModFile[]">
+  Ordered list of files to download and install. See [ModFile fields](#modfile-fields) below.
+
+  <Expandable title="ModFile fields">
+    <ResponseField name="path" type="string" required>
+      Relative path under the Among Us directory where the file is placed (for example, `"BepInEx/plugins/MyMod.dll"`). Victor Launcher maps this path to an absolute destination using the detected Among Us install folder.
+    </ResponseField>
+
+    <ResponseField name="url" type="string" required>
+      HTTPS URL from which Victor Launcher downloads the file. Must be hosted on the same Supabase Storage project configured for the deployment.
+    </ResponseField>
+
+    <ResponseField name="sha256" type="string">
+      Lowercase hex SHA-256 hash of the file contents. Victor Launcher verifies this hash after download; a mismatch surfaces the error `"Hash check failed for <filename>."` and aborts the install.
+    </ResponseField>
+
+    <ResponseField name="sizeBytes" type="integer">
+      Expected size of the downloaded file in bytes. When greater than zero, Victor Launcher checks that the downloaded byte count matches exactly; a mismatch surfaces `"The downloaded size for <filename> did not match the manifest."` and aborts the install. Set to `0` to skip the size check.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Signed manifest envelope
+
+The Supabase endpoint does not return a raw `ModManifest`. It returns a **`SignedManifestResponse`** that wraps a **`SignedManifestEnvelope`**. The outer wrapper lets Victor Launcher verify that the manifest has not been tampered with.
+
+### SignedManifestResponse (outer wrapper)
+
+```json
+{
+  "signingKeyId": "default",
+  "canonicalPayload": "<JSON string of the envelope>",
+  "signature": "<base64url RSA-SHA256 signature>"
+}
+```
+
+| Field | Description |
+|---|---|
+| `signingKeyId` | Identifies which public key to use for verification. Self-hosted deployments set the matching public key in the BepInEx config. |
+| `canonicalPayload` | The envelope JSON serialized as a string. The signature covers exactly this string. |
+| `signature` | Base64url-encoded RSA-SHA256 signature over `canonicalPayload`. If verification fails, Victor Launcher shows `"The room manifest signature could not be verified."` |
+
+### SignedManifestEnvelope (inner payload)
+
+```json
+{
+  "roomCode": "ROOMCODE",
+  "roomName": "My Room",
+  "manifestVersion": 1,
+  "issuedAtUtc": "2024-01-01T00:00:00Z",
+  "expiresAtUtc": "2024-01-01T12:00:00Z",
+  "manifest": { }
+}
+```
+
+| Field | Description |
+|---|---|
+| `roomCode` | The room code players enter in the launcher. Case-insensitive. |
+| `roomName` | Display name of the room or session. |
+| `manifestVersion` | Schema version for forward compatibility. Currently `1`. |
+| `issuedAtUtc` | UTC timestamp when the manifest was signed. |
+| `expiresAtUtc` | UTC timestamp after which the manifest is rejected. Expired manifests produce `"The room manifest has expired. Try again in a moment."` |
+| `manifest` | The full `ModManifest` object described above. |
+
+## Minimal manifest example
+
+The following is a complete, minimal manifest embedded inside a signed envelope. The `canonicalPayload` field in the actual response would be this object serialized as an escaped JSON string.
+
+```json
+{
+  "roomCode": "ALPHA1",
+  "roomName": "Friday Night Lobby",
+  "manifestVersion": 1,
+  "issuedAtUtc": "2024-06-01T20:00:00Z",
+  "expiresAtUtc": "2024-06-01T20:30:00Z",
+  "manifest": {
+    "id": "friday-pack",
+    "name": "Friday Night Pack",
+    "version": "1.0.0",
+    "gameVersion": "2024.3.5",
+    "loader": "BepInEx",
+    "dependencies": [],
+    "conflicts": [],
+    "files": [
+      {
+        "path": "BepInEx/plugins/FridayMod.dll",
+        "url": "https://xziwdtzegzasllwnadih.supabase.co/storage/v1/object/public/mods/FridayMod.dll",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  }
+}
+```

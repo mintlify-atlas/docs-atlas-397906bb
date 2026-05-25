@@ -1,0 +1,102 @@
+---
+title: "Troubleshooting Victor Launcher issues and error messages"
+description: "Solutions for Windows SmartScreen warnings, F7 launch failures, room-code errors, mod-load problems, and mod compatibility questions in Victor Launcher."
+---
+
+Most issues surface as a short status message at the bottom of the launcher overlay, next to the **Ship Status** area. Read that message first — it tells you exactly what went wrong and is the fastest path to a fix.
+
+<AccordionGroup>
+  <Accordion title='"Windows protected your PC" popup when downloading'>
+    Windows Defender SmartScreen shows this popup for unrecognized apps, including Victor Launcher and its companion installer. The file is safe to run.
+
+    To proceed:
+
+    1. Click **More info** in the popup dialog.
+    2. Click **Run anyway**.
+
+    If you want to verify the file independently, upload it to [VirusTotal](https://www.virustotal.com) or another antivirus scanner before running it.
+
+    <Note>
+      This popup appears because Victor Launcher is not code-signed with a commercial certificate, not because it contains malware. Victor Launcher is intended for mod management convenience and does not bypass any game restrictions or trust checks.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Victor Launcher does not open (F7 does nothing)">
+    If pressing **F7** in-game has no effect, BepInEx may not be loading Victor Launcher correctly.
+
+    Check the following:
+
+    - Confirm BepInEx is installed in your Among Us folder. You should see a `BepInEx/` directory next to `Among Us.exe`.
+    - Confirm `VictorLauncher.dll` is inside `BepInEx/plugins/`.
+    - Open `BepInEx/LogOutput.log` in a text editor and look for errors near the Victor Launcher entry. Common causes include a BepInEx version mismatch or a missing dependency.
+
+    <Tip>
+      Legacy versions of Victor Launcher (0.2.0 and older) are supported but do not have newer features. If you are on an old version and **F7** does not work, update to the latest release.
+    </Tip>
+  </Accordion>
+
+  <Accordion title='"Could not find that room code"'>
+    Victor Launcher could not locate the room code you entered in the Supabase database.
+
+    - Double-check that you typed the room code correctly. Room codes are case-insensitive.
+    - Confirm you have an active internet connection.
+    - Ask the room host to verify the code is still active and was saved correctly.
+    - If you are self-hosting, confirm the Supabase URL in `BepInEx/config/com.tate.amongus.starterplugin.cfg` points to the correct project.
+  </Accordion>
+
+  <Accordion title='"The room manifest has expired"'>
+    Manifests have a short time-to-live set by the host. The manifest you received has passed its `expiresAtUtc` timestamp.
+
+    - Wait a moment, then enter the room code again. The host's system may re-issue the manifest automatically.
+    - If the error persists, ask the host to re-save the mod pack so a fresh manifest is generated.
+  </Accordion>
+
+  <Accordion title='"The room manifest signature could not be verified"'>
+    Victor Launcher verified the RSA-SHA256 signature on the manifest envelope and it did not match.
+
+    This error does not occur on the default hosted deployment. It only appears on self-hosted setups where the `ManifestSigningPublicKeyPem` config value does not match the private key used to sign manifests.
+
+    - Open `BepInEx/config/com.tate.amongus.starterplugin.cfg` and confirm `ManifestSigningPublicKeyPem` contains the correct PEM-encoded RSA public key for your Supabase deployment.
+    - See [Supabase self-hosting](/configuration/supabase-self-hosting) for instructions on generating and configuring a matching key pair.
+  </Accordion>
+
+  <Accordion title="Mod not loading after install">
+    Victor Launcher stages new mods in `BepInEx/mod-imports/` and moves them into `BepInEx/plugins/` on the **next** game start. If you installed a mod and it is not active, a full game restart is required.
+
+    If the mod still does not load after restarting:
+
+    - Open `BepInEx/LogOutput.log` and search for the mod's DLL name. BepInEx logs the reason it skips or fails to load a plugin.
+    - Confirm the DLL appears in `BepInEx/plugins/` and is listed as `"active"` in `BepInEx/config/victor-launcher-state.json`.
+    - Check whether the mod requires additional dependencies that are not installed.
+  </Accordion>
+
+  <Accordion title='"This manager cannot disable itself while it is running"'>
+    You cannot disable `VictorLauncher.dll` through the launcher while the game is running, because the DLL is loaded into the game process.
+
+    To remove Victor Launcher:
+
+    1. Close Among Us completely.
+    2. Navigate to `BepInEx/plugins/` in File Explorer.
+    3. Move or delete `VictorLauncher.dll` manually.
+  </Accordion>
+
+  <Accordion title="Mods conflict or are incompatible with each other">
+    Victor Launcher moves files between directories and verifies downloads, but it does not patch or isolate mod code at runtime. Compatibility between large gameplay-overhaul mods depends entirely on the mods themselves.
+
+    If two mods conflict:
+
+    - Disable one of them via the launcher and restart the game to confirm which mod is causing the issue.
+    - Check the mod's own documentation or issue tracker for known conflicts.
+    - Use the `"conflicts"` field in a room-pack manifest to prevent incompatible packs from being installed together. See [mod manifest](/reference/mod-manifest) for details.
+  </Accordion>
+
+  <Accordion title='"Only .dll files can be staged here"'>
+    Victor Launcher only supports BepInEx plugin DLLs. If you selected a file with a different extension (for example, `.zip`, `.cfg`, or `.exe`), the import is rejected with this error.
+
+    Extract the correct `.dll` file from any archive before importing, and place configuration files in their target directories manually.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  If your issue is not listed here, open a GitHub issue at [https://github.com/stevensonhouset5-sys/Victor-Launcher](https://github.com/stevensonhouset5-sys/Victor-Launcher) with a description of the problem and the relevant lines from `BepInEx/LogOutput.log`.
+</Note>

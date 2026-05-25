@@ -1,0 +1,78 @@
+---
+title: "Install, enable, and disable mods in Victor Launcher"
+description: "Learn how to stage and install DLL mods, toggle plugins on and off individually or by folder, and understand the backup system in Victor Launcher."
+---
+
+Victor Launcher organizes your mods into two main sections: **Installed Folders**, which lists everything in `BepInEx/plugins/` and `BepInEx/plugins-disabled/`, and **Queued Folders**, which lists DLLs in `BepInEx/mod-imports/` that are ready to be installed. The header displays two stat chips — **Installed** (blue) showing the number of active mods, and **Ready To Install** (orange) showing the number of queued DLLs.
+
+## Installing a new mod
+
+Use the **Pick DLL** button (purple) to stage a DLL from anywhere on your file system, then install it from the queue.
+
+<Steps>
+  <Step title="Open Victor Launcher">
+    Press **F7** in-game to open the overlay.
+  </Step>
+  <Step title="Stage the DLL">
+    Click **Pick DLL** and select the `.dll` file you want to install. Victor Launcher copies it into `BepInEx/mod-imports/`. Only `.dll` files are accepted.
+  </Step>
+  <Step title="Install from the queue">
+    The DLL appears in the **Queued Folders** section. Click **Install** on the individual mod row to move it from `mod-imports/` to `BepInEx/plugins/`.
+  </Step>
+  <Step title="Restart the game">
+    A restart prompt appears at the bottom of the launcher. Click **Close Now** to quit immediately, or **Later** to finish what you're doing first. BepInEx loads the new mod on the next launch.
+  </Step>
+</Steps>
+
+<Note>
+  After any change, Victor Launcher writes a state snapshot to `BepInEx/config/victor-launcher-state.json` listing the relative paths of every active, disabled, and staged mod.
+</Note>
+
+## Enabling and disabling mods
+
+### Single mod
+
+Each mod row in the **Installed Folders** section shows the mod's name, its relative path, and a pill indicating whether it is **Enabled** or **Disabled**.
+
+- To disable an active mod, click **Disable** on its row. Victor Launcher moves the DLL from `BepInEx/plugins/` to `BepInEx/plugins-disabled/`.
+- To enable a disabled mod, click **Enable** on its row. Victor Launcher moves the DLL back to `BepInEx/plugins/`.
+
+Either action triggers the restart prompt.
+
+<Note>
+  Victor Launcher cannot disable itself. Its own DLL is skipped when you disable a group, and the **Disable** button is not shown for it.
+</Note>
+
+### Whole folder (group)
+
+Click **Open Folder** on any group in **Installed Folders** to drill into it. At the group level, two buttons let you act on every mod in the folder at once:
+
+- **Disable All** — moves every DLL in the group to `BepInEx/plugins-disabled/` (skips Victor Launcher's own DLL).
+- **Enable All** — moves every DLL in the group back to `BepInEx/plugins/`.
+
+## Groups and loose DLLs
+
+Victor Launcher groups DLLs by subdirectory. Any DLL placed inside a subfolder of `plugins/` or `plugins-disabled/` is displayed under a group named after that folder. Nested paths use ` / ` as the separator, so `plugins/my-pack/tools/helper.dll` appears under the group **my-pack / tools**.
+
+DLLs placed directly in the root of `plugins/` or `plugins-disabled/` — with no subfolder — are collected under the label **Loose DLLs**.
+
+## Queued folders
+
+When multiple DLLs share the same subfolder inside `BepInEx/mod-imports/`, they appear together as a queued folder. You can install all of them in one action.
+
+<AccordionGroup>
+  <Accordion title="Install an entire queued folder at once">
+    In the **Queued Folders** section, find the folder you want and click **Install Folder**. Every DLL in that subfolder moves to `BepInEx/plugins/` under the same folder structure. Restart the game to load them.
+  </Accordion>
+  <Accordion title="Delete a disabled mod permanently">
+    Open the group that contains the mod in the **Installed Folders** section and find the mod row. Disabled mods show both an **Enable** button and a **Delete** button. Click **Delete** to permanently remove the DLL from `BepInEx/plugins-disabled/`. This action cannot be undone from inside the launcher; only files already in `plugins-disabled/` can be deleted this way.
+  </Accordion>
+</AccordionGroup>
+
+## Backup system
+
+Before Victor Launcher overwrites any DLL, it places a copy in `BepInEx/victor-backups/<timestamp>/`. This happens automatically whenever an existing file would be replaced during an install operation. You can browse these backups directly in the file system if you need to recover a previous version.
+
+## Refreshing the mod list
+
+If you add or remove files outside Victor Launcher — for example by copying DLLs manually — click **Refresh Lists** (slate) to reload the current state of `plugins/`, `plugins-disabled/`, and `mod-imports/`.

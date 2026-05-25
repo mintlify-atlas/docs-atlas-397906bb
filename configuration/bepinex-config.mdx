@@ -1,0 +1,84 @@
+---
+title: 'Victor Launcher BepInEx configuration file reference'
+description: 'All five config keys Victor Launcher reads from its BepInEx .cfg file, including Supabase URL, anon key, room code, and signing key, with defaults and tips.'
+---
+
+Victor Launcher stores its settings in a standard BepInEx configuration file. The file is created automatically the first time you launch Among Us after installing the mod — you never need to create it by hand. Most users only ever touch the **Room Code** field through the in-game UI, but understanding every key helps when you need to troubleshoot or self-host.
+
+<Note>
+  The defaults that ship with Victor Launcher work out of the box for the public backend. You only need to edit this file if you are self-hosting your own Supabase project or rotating a signing key. See [Self-hosting Supabase](/configuration/supabase-self-hosting) for that workflow.
+</Note>
+
+## File location
+
+```
+BepInEx/config/com.tate.amongus.starterplugin.cfg
+```
+
+The file is created on the first game launch after installation. If you do not see it, launch Among Us once and then quit.
+
+## Config keys
+
+All keys live under the `[Supabase]` section.
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `ProjectUrl` | `https://xziwdtzegzasllwnadih.supabase.co` | The base URL of the Supabase project Victor Launcher connects to. Must match the host where your room manifests and mod files are served. |
+| `AnonKey` | *(JWT bundled with the mod)* | The Supabase anonymous key used to authenticate calls to the room endpoints. Keep this value secret if you are self-hosting. |
+| `ManifestRpc` | `room-manifest` | The name of the Supabase Edge Function that returns a signed room manifest for a given room code. |
+| `RoomCode` | *(empty)* | The room code Victor Launcher uses when you press **Download Pack** in-game. The UI writes back to this key as you type, and the **Reload Config** button re-reads it from this file. |
+| `ManifestSigningPublicKeyPem` | *(RSA public key PEM bundled with the mod)* | The PEM-encoded RSA public key used to verify the signature on room manifests. |
+
+<Warning>
+  If you leave `ManifestSigningPublicKeyPem` blank, Victor Launcher skips signature verification entirely. Any manifest — including a tampered one — will be accepted. Always provide a valid public key in production.
+</Warning>
+
+## The Reload Config button
+
+The **Reload Config** button in the Victor Launcher in-game UI re-reads `RoomCode` from the config file and updates the text field. Use it when you have manually edited the file while the game is already running.
+
+Changes you make to `RoomCode` in the UI are written back to the BepInEx config entry in memory as you type. BepInEx persists config entry changes to disk according to its own config-write lifecycle.
+
+## Example config file
+
+```ini
+[Supabase]
+
+## Your Supabase project URL, for example https://your-project.supabase.co
+# Setting type: String
+# Default value: https://xziwdtzegzasllwnadih.supabase.co
+ProjectUrl = https://xziwdtzegzasllwnadih.supabase.co
+
+## Your Supabase anon key used to call the Victor Launcher room endpoints.
+# Setting type: String
+# Default value: <long JWT>
+AnonKey = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+## The Supabase Edge Function Victor Launcher calls to fetch a signed room manifest by code.
+# Setting type: String
+# Default value: room-manifest
+ManifestRpc = room-manifest
+
+## The current room code Victor Launcher should use when you press Download Pack.
+# Setting type: String
+# Default value:
+RoomCode = AMOGUS
+
+## The PEM-encoded public key Victor Launcher uses to verify signed room manifests.
+# Setting type: String
+# Default value: <RSA public key PEM>
+ManifestSigningPublicKeyPem = -----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+-----END PUBLIC KEY-----
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Self-hosting Supabase" icon="server" href="/configuration/supabase-self-hosting">
+    Replace the default backend with your own Supabase project for private room management.
+  </Card>
+  <Card title="Shared packs" icon="box" href="/guides/shared-packs">
+    Learn how room codes and shared mod packs work for your community.
+  </Card>
+</CardGroup>

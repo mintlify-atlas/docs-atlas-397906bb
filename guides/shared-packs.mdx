@@ -1,0 +1,81 @@
+---
+title: "Share and download Among Us mod packs via room codes"
+description: "Create a room on the Victor Launcher web manager, upload your DLLs, and share a room code so players can download and install the full pack in seconds."
+---
+
+Shared packs let a host bundle multiple mods into a single downloadable pack and distribute them to players using a short room code. Players enter the code in Victor Launcher, which fetches the pack manifest, verifies its authenticity, and downloads each DLL directly into the install queue — no manual file sharing required.
+
+<Tabs>
+  <Tab title="Host">
+    ## Creating and publishing a room
+
+    A room stores your mod pack on the Victor Launcher web manager. Once published, anyone with the room code can download the exact set of DLLs you uploaded.
+
+    <Steps>
+      <Step title="Open the web manager">
+        Go to [https://ateasvictor.github.io/Victor-Launcher/](https://ateasvictor.github.io/Victor-Launcher/) in your browser.
+      </Step>
+      <Step title="Create a room">
+        Give your room a **name**, a **room code**, and a **password**. The room code is what you share with players, so choose something short and memorable.
+
+        Room code rules:
+        - Alphanumeric characters, dashes (`-`), and underscores (`_`) only
+        - Maximum 12 characters
+        - Case-insensitive — Victor Launcher normalizes it to uppercase automatically
+      </Step>
+      <Step title="Upload your DLLs">
+        Add the mod DLL files you want to include in the pack. The uploaded files form a draft of your room.
+      </Step>
+      <Step title="Publish the pack">
+        Click **Save Room Pack** to publish the draft. The pack is now live and available to anyone who enters your room code.
+      </Step>
+      <Step title="Share the room code">
+        Send the room code to your players. They can enter it in Victor Launcher to download the pack.
+      </Step>
+    </Steps>
+
+    <Warning>
+      Published manifests have an expiry time (`IssuedAtUtc` + `ExpiresAtUtc`). Players must download the pack before it expires. Re-save the room to generate a fresh manifest if yours has expired.
+    </Warning>
+  </Tab>
+  <Tab title="Player">
+    ## Downloading and installing a pack
+
+    When you receive a room code, use Victor Launcher to download the full mod pack in a few steps.
+
+    <Steps>
+      <Step title="Open Victor Launcher">
+        Press **F7** in-game to open the overlay.
+      </Step>
+      <Step title="Enter the room code">
+        Type the room code into the room code field. The code is not case-sensitive.
+      </Step>
+      <Step title="Download the pack">
+        Click **Download Pack**. Victor Launcher fetches the signed manifest from the server, verifies the RSA/SHA-256 signature, and downloads each DLL in the pack. Files are saved into `BepInEx/mod-imports/<ROOM-CODE>/`.
+      </Step>
+      <Step title="Install the queued folder">
+        The downloaded pack appears in the **Queued Folders** section as a folder named after the room code. Click **Install Folder** to move all the DLLs into `BepInEx/plugins/`.
+      </Step>
+      <Step title="Restart the game">
+        Click **Close Now** when the restart prompt appears, or **Later** to restart on your own. BepInEx loads the new mods on the next launch.
+      </Step>
+    </Steps>
+
+    <Note>
+      Downloaded DLLs land in a queued folder named after the room code (for example, `MYROOM`). You can also install individual DLLs from that folder one at a time using the **Install** button on each mod row.
+    </Note>
+  </Tab>
+</Tabs>
+
+## What happens during a download
+
+When you click **Download Pack**, Victor Launcher runs the following steps automatically:
+
+1. Sends the room code to the Supabase Edge Function at the `room-manifest` endpoint (falls back to the `get_room_manifest` RPC for legacy backends).
+2. Verifies the RSA/SHA-256 signature on the returned manifest.
+3. Checks that the manifest has not expired.
+4. Validates that every file URL belongs to the same host as the configured Supabase project.
+5. Downloads each DLL and checks its SHA-256 hash and file size against the values in the manifest.
+6. Saves each file to `BepInEx/mod-imports/<ROOM-CODE>/` using the file name from the manifest.
+
+If any check fails, the download is aborted and the **Ship Status** bar at the bottom of the launcher shows a warning message explaining what went wrong.
